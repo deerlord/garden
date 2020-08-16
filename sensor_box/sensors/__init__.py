@@ -39,6 +39,7 @@ def select_pins(total: int = 2):
 
 @dataclass
 class Multiplexer():
+    voltage: float
     channels: int = 8
     devices: int = 2
 
@@ -47,6 +48,7 @@ class Multiplexer():
         return self.channels * self.devices
 
     def __post_init__(self):
+        self.voltage = max(3.3, min(5.0, self.max_voltage))
         self.select_pins = select_pins(
             total=self.devices
         )
@@ -72,22 +74,28 @@ class Multiplexer():
 
 @dataclass
 class Sensor(metaclass=ABCMeta):
-    channel: int
-    multiplexer: Multiplexer
-   
+    """
+    An abstract base class to implement a sensor.
+
+    ATTRIBUTES
+    getter:
+      A function that when called returns the analog voltage
+      value from the ADC.
+
+    METHODS
+    _transform(value: float)
+      This method takes one argument, a float representing
+      the voltage read by the ADC. This method should return whatever
+      value is appropriate for your sensor data to be meaningful. 
+   """
+    getter: Any
+
     @abstractmethod
-    def __transform(self, value):
+    def _transform(self, value: float):
         return value
 
     @property
     def value(self):
-        return self.__transform(
-            value=self.multiplexer[self.channel]
+        return self._transform(
+            value=self.getter()
         )
-
-
-
-
-m = Multiplexer()
-for  i in range(0, 16, 1):
-    print(i, m[i])
