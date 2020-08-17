@@ -20,7 +20,7 @@ class AnalogInput():
         )
         value = mcp.value
         mcp.close()
-        return value
+        return round(value, 2)
 
 
 def select_pins(total: int = 2):
@@ -48,7 +48,7 @@ class Multiplexer():
         return self.channels * self.devices
 
     def __post_init__(self):
-        self.voltage = max(3.3, min(5.0, self.max_voltage))
+        self.voltage = max(3.3, min(5.0, self.voltage))
         self.select_pins = select_pins(
             total=self.devices
         )
@@ -67,7 +67,7 @@ class Multiplexer():
 
     def __iter__(self):
         return (
-            self.__inputs[channel].value
+            self.__inputs[channel].value()
             for channel in range(0, self.max_channels, 1)
         )
 
@@ -99,3 +99,9 @@ class Sensor(metaclass=ABCMeta):
         return self._transform(
             value=self.getter()
         )
+
+
+if __name__ == '__main__':
+    multiplexer = Multiplexer(voltage=3.3)
+    for i in multiplexer:
+        print(i)

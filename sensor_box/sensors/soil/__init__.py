@@ -18,9 +18,6 @@ class Moisture(Sensor):
         return max(0, min(self.__value_map['100'], value))
 
     def _transform(self, value):
-        value = (value * float(self.__value_map['100']))
-        return value
-
-print('making Moisture')
-moisture = Moisture(getter=lambda: 0.0, voltage=3.3)
-print(moisture.value)
+        return self.__clamp_value(
+            value * float(self.__value_map['100'])
+        )
