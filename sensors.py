@@ -26,6 +26,12 @@ class MCP():
         mcp.close()
         return round(value, 2)
 
+    def __iter__(self):
+        return (
+            self.__getitem__(channel)
+            for channel in range(0, self.channels, 1)
+        )
+
 
 @dataclass
 class Multiplexer():
@@ -62,28 +68,39 @@ class Multiplexer():
         return self.__chips[device][channel]
 
     def __iter__(self):
-        return (value for value in self.__chips)
+        return (
+            value 
+            for chip in self.__chips
+            for value in chip
+        )
 
 
-def main():
-    import influxdb
-    import socket
-    from time import sleep
+import influxdb
+import socket
+from time import sleep, time
+from gpiozero import LED
 
-    client = influxdb.InfluxDBClient(
-        host='influxdb',
-        port=443,
-        ssl=True,
-        verify_ssl=True,
-        database='gardens'
-    )
-    multiplexer = Multiplexer(voltage=3.3)
-    while True:
-        data_wrapper = [{
-            'measurement': garden_boxes,
-            'tags': [socket.gethostname()],
-            'time': time,
-            'fields': {index: value for index, value in enumerate((multiplexer))}
-        }]
-        client.write_points(data_wrapper)
-        sleep(3600)
+
+client = influxdb.InfluxDBClient(
+    host='influxdb.deerlord.lan',
+    port=443,
+    ssl=True,
+    database='sensors'
+)
+multiplexer = Multiplexer(voltage=3.3)
+devices = LED(26)
+while True:
+    devices.on()
+    sensor_values = [value for value in multiplexer]
+    print('sensor', sensor_values)
+    data_wrapper = [{
+        'measurement': 'sensor_boxes',
+        'tags': {
+            'host': socket.gethostname()
+        },
+        'time': int(time()),
+        'fields': {str(index): value for index, value in enumerate((multiplexer))}
+    }]
+    devices.off()
+    client.write_points(data_wrapper)
+    sleep(3600)
