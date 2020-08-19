@@ -1,8 +1,6 @@
 ---
-hostname: "{{ hostname }}"
-
-- name: install sensors
-  hosts: none
+- name: install sensorss
+  hosts: localhost
   become: true
   tasks:
     - name: install screen
