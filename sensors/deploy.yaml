@@ -1,0 +1,41 @@
+---
+hostname: "{{ hostname }}"
+hostip: "{{ hostip }}"
+
+- name: install sensors
+  hosts: hostip
+  become: true
+  tasks:
+    - name: install screen
+      apt:
+        name: screen
+        state: present
+    - name: install python3
+      apt:
+        name: python3
+        state: present
+    - name: install python3-venv
+      apt:
+        name: python3-venv
+        state: present
+    - name: create app directory
+      file:
+        path: /opt/sensors/
+        state: directory
+        mode: '0750'
+    - name: create venv
+      command:
+        cmd: python3 -m venv /opt/sensors/venv
+        creates: "/opt/sensors/venv/"
+    - name: copy application
+      copy:
+        src: app.py
+        dest: /opt/sensors/
+    - name: template config
+      template:
+        src: config.json.j2
+        dest: /opt/sensors/config.json
+        mode: '0640'
+    - name: run application
+      cmd:
+        command: chdir=/opt/sensors screen -S application -d -m venv/bin/python app.py 

@@ -79,7 +79,7 @@ class Multiplexer():
         )
 
 
-with open('./sensors.json') as json_file:
+with open('./config.json') as json_file:
     config = json.load(json_file)
 
 client = influxdb.InfluxDBClient(
