@@ -5,6 +5,10 @@ from functools import partial
 from math import floor
 from typing import List, Any
 import gpiozero
+import influxdb
+import socket
+from time import sleep, time
+import json
 
 
 @dataclass
@@ -75,31 +79,33 @@ class Multiplexer():
         )
 
 
-import influxdb
-import socket
-from time import sleep, time
-from gpiozero import LED
-
+with open('./sensors.json') as json_file:
+    config = json.load(json_file)
 
 client = influxdb.InfluxDBClient(
-    host='influxdb.deerlord.lan',
-    port=443,
+    host=config['influx']['host'],
+    port=config['influx']['port'],
     ssl=True,
-    database='sensors'
+    database=config['influx']['database']
 )
-multiplexer = Multiplexer(voltage=3.3)
-devices = LED(26)
+multiplexer = Multiplexer(
+    channels=config['chips']['channels'],
+    devices=config['chips']['devices'],
+    voltage=3.3
+)
+devices = gpiozero.LED(26)
 while True:
     devices.on()
-    sensor_values = [value for value in multiplexer]
-    print('sensor', sensor_values)
     data_wrapper = [{
         'measurement': 'sensor_boxes',
         'tags': {
-            'host': socket.gethostname()
+            'box': config['local']['name']
         },
         'time': int(time()),
-        'fields': {str(index): value for index, value in enumerate((multiplexer))}
+        'fields': {
+            str(index): value
+            for index, value in enumerate((multiplexer))
+        }
     }]
     devices.off()
     client.write_points(data_wrapper)

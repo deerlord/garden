@@ -1,0 +1,14 @@
+{
+  "influx": {
+    "host": "influxdb.deerlord.lan",
+    "port": "443",
+    "database": "sensors"
+  },
+  "chips": {
+    "channels": 8,
+    "devices": 2
+  },
+  "local": {
+    "name": "box_one"
+  }
+}
