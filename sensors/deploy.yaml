@@ -1,9 +1,8 @@
 ---
 hostname: "{{ hostname }}"
-hostip: "{{ hostip }}"
 
 - name: install sensors
-  hosts: hostip
+  hosts: none
   become: true
   tasks:
     - name: install screen
@@ -36,6 +35,13 @@ hostip: "{{ hostip }}"
         src: config.json.j2
         dest: /opt/sensors/config.json
         mode: '0640'
-    - name: run application
-      cmd:
-        command: chdir=/opt/sensors screen -S application -d -m venv/bin/python app.py 
+    - name: install service file
+      copy:
+        src: sensors.service
+        dest: /etc/systemd/system
+    - name: enable service
+      command:
+        cmd: systemctl enable sensors
+    - name: start service
+      command:
+        cmd: systemctl start sensors
